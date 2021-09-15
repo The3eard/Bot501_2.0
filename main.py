@@ -32,7 +32,6 @@ bot = commands.Bot(command_prefix='-')
 def sql_connection():
     try:
         con = sqlite3.connect(database_file)
-        # print("Connection is established: Database is created in memory")
         return (con)
     except Error:
         print(Error)
@@ -40,36 +39,30 @@ def sql_connection():
 
 def sql_fetch(query):
     try:
-        # print(query)
         con = sql_connection()
         cursor = con.cursor()
         cursor.execute(query)
         query = cursor.fetchall()
-        # print("Record fetch successfully")
         return (query)
     except sqlite3.Error as error:
         print("Failed to fetch sqlite table", error)
     finally:
         if (con):
             con.close()
-            # print("The SQLite connection is closed")
 
 
 def sql_update(query):
     try:
-        # print(query)
         con = sql_connection()
         cursor = con.cursor()
         cursor.execute(query)
         con.commit()
-        # print("Record Updated successfully")
         cursor.close()
     except sqlite3.Error as error:
         print("Failed to update sqlite table", error)
     finally:
         if (con):
             con.close()
-            # print("The SQLite connection is closed")
 
 
 def update_steam_hll(steamid64, campo):
@@ -117,34 +110,33 @@ def change_date_format(dt):
 
 def obtener_estadisticas(member):
     # Obtenemos las estadisticas de la BD
-    query = 'SELECT TipoPartida,Fecha,Muertes,Bajas,idClase,Funcion,Curados,VehiculosDestruidos,EstructurasConstruidas,AusenciaUltimoMomento,Ausencia,Desapuntado FROM "Partidas" INNER JOIN "Estadisticas" ON Estadisticas.idPartida = Partidas.idPartida WHERE idMiembro=' + str(
-        member.id) + ' ORDER BY date(Fecha) ASC'
-    columnas_estadisticas = (
-        'TipoPartida', 'Fecha', 'Muertes', 'Bajas', 'idClase', 'Funcion', 'Curados', 'VehiculosDestruidos',
-        'EstructurasConstruidas', 'AusenciaUltimoMomento', 'Ausencia', 'Desapuntado')
+    query = 'SELECT SUM(Bajas) as Bajas, SUM(MUERTES) as Muertes, COUNT(*) as Partidas FROM "Estadisticas" WHERE idMiembro=' + str(
+        member.id)
+    columnas_estadisticas = ('Bajas', 'Muertes', 'Partidas')
     datos_estadisticas = pd.DataFrame(sql_fetch(query), columns=columnas_estadisticas)
     # Comprobamos si hay partidas jugadas
-    if datos_estadisticas[
-        (datos_estadisticas['TipoPartida'] == 'Oficial') & (datos_estadisticas['AusenciaUltimoMomento'] == 0) & (
-                datos_estadisticas['Ausencia'] == 0) & (datos_estadisticas['Desapuntado'] == 0)].shape[0] == 0:
-        fecha_upartida = "-"
-    else:
-        fecha_upartida = datos_estadisticas[
-            (datos_estadisticas['TipoPartida'] == 'Oficial') & (datos_estadisticas['AusenciaUltimoMomento'] == 0) & (
-                    datos_estadisticas['Ausencia'] == 0) & (datos_estadisticas['Desapuntado'] == 0)]['Fecha'].iloc[
-            -1]
+    # if datos_estadisticas[
+    #     (datos_estadisticas['TipoPartida'] == 'Oficial') & (datos_estadisticas['AusenciaUltimoMomento'] == 0) & (
+    #             datos_estadisticas['Ausencia'] == 0) & (datos_estadisticas['Desapuntado'] == 0)].shape[0] == 0:
+    #     fecha_upartida = "-"
+    # else:
+    #     fecha_upartida = datos_estadisticas[
+    #         (datos_estadisticas['TipoPartida'] == 'Oficial') & (datos_estadisticas['AusenciaUltimoMomento'] == 0) & (
+    #                 datos_estadisticas['Ausencia'] == 0) & (datos_estadisticas['Desapuntado'] == 0)]['Fecha'].iloc[
+    #         -1]
     # Comprobamos si hay entrenamientos jugados
-    if datos_estadisticas[
-        (datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (datos_estadisticas['AusenciaUltimoMomento'] == 0) & (
-                datos_estadisticas['Ausencia'] == 0) & (datos_estadisticas['Desapuntado'] == 0)].shape[0] == 0:
-        fecha_uentrenamiento = "-"
-    else:
-        fecha_uentrenamiento = datos_estadisticas[(datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (
-                datos_estadisticas['AusenciaUltimoMomento'] == 0) & (datos_estadisticas['Ausencia'] == 0) & (
-                                                          datos_estadisticas['Desapuntado'] == 0)]['Fecha'].iloc[-1]
+    # if datos_estadisticas[
+    #     (datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (datos_estadisticas['AusenciaUltimoMomento'] == 0) & (
+    #             datos_estadisticas['Ausencia'] == 0) & (datos_estadisticas['Desapuntado'] == 0)].shape[0] == 0:
+    #     fecha_uentrenamiento = "-"
+    # else:
+    #     fecha_uentrenamiento = datos_estadisticas[(datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (
+    #             datos_estadisticas['AusenciaUltimoMomento'] == 0) & (datos_estadisticas['Ausencia'] == 0) & (
+    #                                                       datos_estadisticas['Desapuntado'] == 0)]['Fecha'].iloc[-1]
     # Empezamos a obtener valores del dataframe
-    Muertes = int(datos_estadisticas['Muertes'].sum())
-    Bajas = int(datos_estadisticas['Bajas'].sum())
+    Muertes = int(datos_estadisticas['Muertes'])
+    Bajas = int(datos_estadisticas['Bajas'])
+    Partidas = int(datos_estadisticas['Partidas'])
     # Si las variables son 0 no calculamos
     if Muertes == 0 and Bajas == 0:
         Muertes = "0"
@@ -153,37 +145,38 @@ def obtener_estadisticas(member):
     else:
         KD = Muertes / Bajas
     # Seguimos obteniendo valores del dataframe
-    Curados = int(datos_estadisticas['Curados'].sum())
-    VehiculosDestruidos = int(datos_estadisticas['VehiculosDestruidos'].sum())
-    EstructurasConstruidas = int(datos_estadisticas['EstructurasConstruidas'].sum())
+    # Curados = int(datos_estadisticas['Curados'].sum())
+    # VehiculosDestruidos = int(datos_estadisticas['VehiculosDestruidos'].sum())
+    # EstructurasConstruidas = int(datos_estadisticas['EstructurasConstruidas'].sum())
     # Si no hay valores lo dejamos en -
-    if datos_estadisticas.shape[0] == 0:
-        ClaseMasUsada = "-"
-        FuncionMasJugada = "-"
-    else:
-        ClaseMasUsada = obtener_clase(datos_estadisticas['idClase'].mode().values[0])
-        FuncionMasJugada = datos_estadisticas['Funcion'].mode().values[0]
+    # if datos_estadisticas.shape[0] == 0:
+    #     ClaseMasUsada = "-"
+    #     FuncionMasJugada = "-"
+    # else:
+    #     ClaseMasUsada = obtener_clase(datos_estadisticas['idClase'].mode().values[0])
+    #     FuncionMasJugada = datos_estadisticas['Funcion'].mode().values[0]
     # Seguimos obteniendo valores del dataframe
-    partidas_apuntado = (datos_estadisticas['TipoPartida'] == 'Oficial').sum()
-    partidas_ausente_um = ((datos_estadisticas['TipoPartida'] == 'Oficial') & (
-            datos_estadisticas['AusenciaUltimoMomento'] == 1)).sum()
-    partidas_ausente = ((datos_estadisticas['TipoPartida'] == 'Oficial') & (datos_estadisticas['Ausencia'] == 1)).sum()
-    partidas_desapuntado = (
-            (datos_estadisticas['TipoPartida'] == 'Oficial') & (datos_estadisticas['Desapuntado'] == 1)).sum()
-    partidas_jugadas = partidas_apuntado - partidas_ausente_um - partidas_ausente - partidas_desapuntado
-    entrenamientos_apuntado = (datos_estadisticas['TipoPartida'] == 'Entrenamiento').sum()
-    entrenamientos_ausente_um = ((datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (
-            datos_estadisticas['AusenciaUltimoMomento'] == 1)).sum()
-    entrenamientos_ausente = (
-            (datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (datos_estadisticas['Ausencia'] == 1)).sum()
-    entrenamientos_desapuntado = (
-            (datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (datos_estadisticas['Desapuntado'] == 1)).sum()
-    entrenamientos_jugados = entrenamientos_apuntado - entrenamientos_ausente_um - entrenamientos_ausente - entrenamientos_desapuntado
-    return (
-        fecha_upartida, fecha_uentrenamiento, KD, Muertes, Bajas, Curados, VehiculosDestruidos, EstructurasConstruidas,
-        ClaseMasUsada, FuncionMasJugada, partidas_apuntado, partidas_jugadas, partidas_ausente, partidas_ausente_um,
-        partidas_desapuntado, entrenamientos_apuntado, entrenamientos_jugados, entrenamientos_ausente,
-        entrenamientos_ausente_um, entrenamientos_desapuntado)
+    # partidas_apuntado = (datos_estadisticas['TipoPartida'] == 'Oficial').sum()
+    # partidas_ausente_um = ((datos_estadisticas['TipoPartida'] == 'Oficial') & (
+    #         datos_estadisticas['AusenciaUltimoMomento'] == 1)).sum()
+    # partidas_ausente = ((datos_estadisticas['TipoPartida'] == 'Oficial') & (datos_estadisticas['Ausencia'] == 1)).sum()
+    # partidas_desapuntado = (
+    #         (datos_estadisticas['TipoPartida'] == 'Oficial') & (datos_estadisticas['Desapuntado'] == 1)).sum()
+    # partidas_jugadas = partidas_apuntado - partidas_ausente_um - partidas_ausente - partidas_desapuntado
+    # entrenamientos_apuntado = (datos_estadisticas['TipoPartida'] == 'Entrenamiento').sum()
+    # entrenamientos_ausente_um = ((datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (
+    #         datos_estadisticas['AusenciaUltimoMomento'] == 1)).sum()
+    # entrenamientos_ausente = (
+    #         (datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (datos_estadisticas['Ausencia'] == 1)).sum()
+    # entrenamientos_desapuntado = (
+    #         (datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (datos_estadisticas['Desapuntado'] == 1)).sum()
+    # entrenamientos_jugados = entrenamientos_apuntado - entrenamientos_ausente_um - entrenamientos_ausente - entrenamientos_desapuntado
+    # return (
+    #     fecha_upartida, fecha_uentrenamiento, KD, Muertes, Bajas, Curados, VehiculosDestruidos, EstructurasConstruidas,
+    #     ClaseMasUsada, FuncionMasJugada, partidas_apuntado, partidas_jugadas, partidas_ausente, partidas_ausente_um,
+    #     partidas_desapuntado, entrenamientos_apuntado, entrenamientos_jugados, entrenamientos_ausente,
+    #     entrenamientos_ausente_um, entrenamientos_desapuntado)
+    return (Bajas, Muertes, KD, Partidas)
 
 
 def escribir_ficha(member):
@@ -234,8 +227,8 @@ def escribir_ficha(member):
         value="Disponibilidad: " + get_Disponibilidad +
               "\nUltima vez en canal de voz: " + str(change_date_format(get_UltimaVezVoz)) +
               "\nUltimo mensaje: " + str(change_date_format(get_UltimaVezChat)) +
-              "\nUltimo evento: " + str(change_date_format(estadisticas[0])) +
-              "\nUltimo entrenamiento: " + str(change_date_format(estadisticas[1])) +
+              # "\nUltimo evento: " + str(change_date_format(estadisticas[0])) +
+              # "\nUltimo entrenamiento: " + str(change_date_format(estadisticas[1])) +
               "\nHoras steam HLL inicial: " + get_SteamHLL_Inicio +
               "\nHoras steam HLL: " + SteamHLL,
         inline=False
@@ -243,34 +236,37 @@ def escribir_ficha(member):
     embed.add_field(
         name="Estadisticas",
         value="KD: " + str(estadisticas[2])[0:4] +
-              "\nMuertes: " + str(estadisticas[3]) +
-              "\nBajas: " + str(estadisticas[4]) +
-              "\nCurados: " + str(estadisticas[5]) +
-              "\nVehiculos Destruidos: " + str(estadisticas[6]) +
-              "\nEstructuras Construidas: " + str(estadisticas[7]) +
-              "\nClase mas jugada: " + str(estadisticas[8]) +
-              "\nFunción más jugada: " + str(estadisticas[9]) +
-              "\nPartidas jugadas: " + str(estadisticas[10]) +
-              "\nEntrenamientos: " + str(estadisticas[16]),
+              "\nMuertes: " + str(estadisticas[1]) +
+              "\nBajas: " + str(estadisticas[0]) +
+              "\nPartidas: " + str(estadisticas[3]),
+
+        # +
+        # "\nCurados: " + str(estadisticas[5]) +
+        # "\nVehiculos Destruidos: " + str(estadisticas[6]) +
+        # "\nEstructuras Construidas: " + str(estadisticas[7]) +
+        # "\nClase mas jugada: " + str(estadisticas[8]) +
+        # "\nFunción más jugada: " + str(estadisticas[9]) +
+        # "\nPartidas jugadas: " + str(estadisticas[10]) +
+        # "\nEntrenamientos: " + str(estadisticas[16]),
         inline=False
     )
-    embed.add_field(
-        name="Gestión",
-        value="Partidas apuntado: " + str(estadisticas[10]) +
-              "\nPartidas jugadas: " + str(estadisticas[11]) +
-              "\nAusencias partidas: " + str(estadisticas[12]) +
-              "\nAusencias ultima hora partidas: " + str(estadisticas[13]) +
-              "\nDesapuntado de partidas: " + str(estadisticas[14]) +
-              "\nEntrenamientos apuntado: " + str(estadisticas[15]) +
-              "\nEntrenamientos: " + str(estadisticas[16]) +
-              "\nAusencias entrenamientos: " + str(estadisticas[17]) +
-              "\nAusencias ultima hora entrenamientos: " + str(estadisticas[18]) +
-              "\nDesapuntado de entrenamientos: " + str(estadisticas[19]) +
-              "\nAmonestaciones: " + str(n_amonestaciones) +
-              "\nStreaming: " + str(get_Streaming) +
-              "\nObservaciones: " + get_Observaciones,
-        inline=False
-    )
+    # embed.add_field(
+    #     name="Gestión",
+    #     value="Partidas apuntado: " + str(estadisticas[10]) +
+    #           "\nPartidas jugadas: " + str(estadisticas[11]) +
+    #           "\nAusencias partidas: " + str(estadisticas[12]) +
+    #           "\nAusencias ultima hora partidas: " + str(estadisticas[13]) +
+    #           "\nDesapuntado de partidas: " + str(estadisticas[14]) +
+    #           "\nEntrenamientos apuntado: " + str(estadisticas[15]) +
+    #           "\nEntrenamientos: " + str(estadisticas[16]) +
+    #           "\nAusencias entrenamientos: " + str(estadisticas[17]) +
+    #           "\nAusencias ultima hora entrenamientos: " + str(estadisticas[18]) +
+    #           "\nDesapuntado de entrenamientos: " + str(estadisticas[19]) +
+    #           "\nAmonestaciones: " + str(n_amonestaciones) +
+    #           "\nStreaming: " + str(get_Streaming) +
+    #           "\nObservaciones: " + get_Observaciones,
+    #     inline=False
+    # )
     embed.set_footer(text="This is the footer. It contains text at the bottom of the embed")
     return (embed)
 
@@ -329,7 +325,7 @@ async def ficha(ctx, arg1, member: discord.Member):
     # Comando para ver ficha
     if arg1 == "ver":
         try:
-            embed = escribir_ficha(member.id)
+            embed = escribir_ficha(member)
             await ctx.channel.send(embed=embed)
         except Error:
             await ctx.channel.send(Error)
@@ -530,8 +526,8 @@ async def ficha(ctx, arg1, member: discord.Member):
 #################
 
 def consultar_miembro_por_nick(nick):
-    query = 'SELECT idMiembro,Nick,Nombre,Localidad,FechaNacimiento,Clase,DisponibilidadHoraria,SteamID64,SteamHLL_Inicio,Streaming from Miembros where Nick="' + str(
-        nick) + '"'
+    query = 'SELECT idMiembro,Nick,Nombre,Localidad,FechaNacimiento,Clase,DisponibilidadHoraria,SteamID64,SteamHLL_Inicio,Streaming from Miembros where Nick like "' + str(
+        nick) + '%"'
     datos_miembro = sql_fetch(query)
     check = datos_miembro != []
     return check, datos_miembro
@@ -548,11 +544,8 @@ def introducir_stats_partida(player_list, id_partida):
     for player in player_list:
         if is501(player):
             query = 'INSERT INTO Estadisticas (idMiembro,idPartida, Muertes, Bajas) VALUES(' + str(
-                numpy.array(consultar_miembro_por_nick(player[0][9:40])[1][0][0])) + ', ' + str(
-                id_partida[0]) + ',"' + str(player[2]) + '","' + str(
-                player[1]) + '")'
-            print(id_partida)
-            print(query)
+                numpy.array(consultar_miembro_por_nick(player[0][9:13])[1][0][0])) + ', ' + str(
+                id_partida[0]) + ',"' + str(player[2]) + '","' + str(player[1]) + '")'
             sql_update(query)
 
 
@@ -645,22 +638,41 @@ def consultar_partida(id_partida):
         if id_partida == 'all':
             res = sql_fetch('SELECT * From Partidas')
         else:
-            res = sql_fetch('SELECT * From Partidas WHERE idPartida=' + str(id_partida))
+            res = sql_fetch('SELECT * From Partidas WHERE idPartida=' + id_partida[0])
         for row in res:
-            query += ("ID = " + str(row[0]) + ", " + "contrincante = " + str(row[1]) + ", " + "aliados = "
+            query += ("```ID = " + str(row[0]) + ", " + "contrincante = " + str(row[1]) + ", " + "aliados = "
                       + str(row[2]) + ", " + "resultado = " + str(row[3]) + ", " + "puntuacion = " + str(row[4])
                       + ", " + "fecha = " + str(row[5]) + ", " + "número de jugadores = " + str(row[6]) + ", "
-                      + "Tipo de partida = " + str(row[7]) + ", " + "Bando = " + str(row[8]) + "\n")
+                      + "Tipo de partida = " + str(row[7]) + ", " + "Bando = " + str(row[8]) + "```")
         return query
     except:
-        return ''
+        return False
 
 
 def borrar_partida(id_partida):
     try:
         con = sql_connection()
         cursor = con.cursor()
-        cursor.execute('DELETE FROM Partidas WHERE idPartida=' + str(id_partida))
+        sql = 'DELETE FROM Partidas WHERE idPartida=' + id_partida[0]
+        cursor.execute(sql)
+        con.commit()
+        cursor.close()
+        return True, ""
+    except sqlite3.Error as error:
+        print("Failed to update sqlite table", error)
+        return False, ""
+    finally:
+        if con:
+            con.close()
+
+
+def borrar_stats(id_partida):
+    try:
+        con = sql_connection()
+        cursor = con.cursor()
+        sql = 'DELETE FROM Estadisticas WHERE idPartida=' + id_partida[0]
+        cursor.execute(sql)
+        con.commit()
         cursor.close()
         return True, ""
     except sqlite3.Error as error:
@@ -672,18 +684,22 @@ def borrar_partida(id_partida):
 
 
 def insertar_datos(msg, id_partida):
-    for attachment_url in msg.message.attachments:
-        with requests.Session() as session:
-            player_list = list(
-                csv.reader(session.get(str(attachment_url)).content.decode('utf-8').splitlines(), delimiter=','))
-            result = consultar_lista_miembros(player_list)
-            error_list = result[1]
-            error_check = result[0]
-            if not error_check:
-                introducir_stats_partida(player_list, id_partida)
-                return True, ''
-            else:
-                return False, str(error_list)
+    if consultar_partida(id_partida):
+        borrar_stats(id_partida)
+        for attachment_url in msg.message.attachments:
+            with requests.Session() as session:
+                player_list = list(
+                    csv.reader(session.get(str(attachment_url)).content.decode('utf-8').splitlines(), delimiter=','))
+                result = consultar_lista_miembros(player_list)
+                error_list = result[1]
+                error_check = result[0]
+                if not error_check:
+                    introducir_stats_partida(player_list, id_partida)
+                    return True, ''
+                else:
+                    return False, str(error_list)
+    else:
+        return False, '```No existe partida con el ID proporcionado```'
 
 
 @bot.command(pass_context=True)
@@ -696,10 +712,9 @@ async def partida(msg, accion, *id_partida):
         else:
             return await msg.send("No se ha podido crear la partida")
     elif accion == 'borrar':
-        res = consultar_partida(id_partida[0])
-        print(res)
+        res = consultar_partida(id_partida)
         if len(res) > 1:
-            delete = borrar_partida(id_partida[0])
+            delete = borrar_partida(id_partida)
             if delete[0]:
                 return await msg.send("Partida con ID " + id_partida[0] + " borrada")
             else:
@@ -709,7 +724,7 @@ async def partida(msg, accion, *id_partida):
     elif accion == 'csv':
         res = insertar_datos(msg, id_partida)
         if res[0]:
-            return await msg.send(str("Datos introducidos correctamente"))
+            return await msg.send(str("```Datos introducidos correctamente.```"))
         else:
             return await msg.send(res[1])
     elif accion == 'consultar':

@@ -25,9 +25,8 @@
 
 &nbsp;Insert stats in DB if all members of a predefined group exists in Members DB.
 
-<br><br><br>
+<br>
 
 # TODOS
-- Check stats by member
 - Check stats ranking by stat
-- Check if game exists before insert stats
+- Check if inserted data is correct
