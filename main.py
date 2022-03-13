@@ -16,6 +16,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from steam.webapi import WebAPI
 
+
 logging.basicConfig(level=logging.INFO)
 
 load_dotenv()

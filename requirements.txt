@@ -1,0 +1,6 @@
+discord
+numpy
+pandas
+requests
+python-dotenv
+steam
