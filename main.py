@@ -413,7 +413,7 @@ async def ficha(ctx, arg1, member: discord.Member):
     if arg1 == "editar":
         try:
             # Si el miembro no existe paramos.
-            datos_miembro = consultar_miembro(member)
+            datos_miembro = consultar_miembro(member.id)
             if datos_miembro[0] == False:
                 await ctx.send("La ficha del miembro no existe.")
                 return
