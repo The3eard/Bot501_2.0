@@ -4,3 +4,5 @@
 
 /.env
 /.idea
+!/div501.db
+!/.env
