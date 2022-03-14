@@ -111,33 +111,38 @@ def change_date_format(dt):
 
 def obtener_estadisticas(member):
     # Obtenemos las estadisticas de la BD
-    query = 'SELECT SUM(Bajas) as Bajas, SUM(MUERTES) as Muertes, COUNT(*) as Partidas FROM "Estadisticas" WHERE idMiembro=' + str(
-        member.id)
-    columnas_estadisticas = ('Bajas', 'Muertes', 'Partidas')
-    datos_estadisticas = pd.DataFrame(sql_fetch(query), columns=columnas_estadisticas)
-    # Comprobamos si hay partidas jugadas
-    # if datos_estadisticas[
-    #     (datos_estadisticas['TipoPartida'] == 'Oficial') & (datos_estadisticas['AusenciaUltimoMomento'] == 0) & (
-    #             datos_estadisticas['Ausencia'] == 0) & (datos_estadisticas['Desapuntado'] == 0)].shape[0] == 0:
-    #     fecha_upartida = "-"
-    # else:
-    #     fecha_upartida = datos_estadisticas[
-    #         (datos_estadisticas['TipoPartida'] == 'Oficial') & (datos_estadisticas['AusenciaUltimoMomento'] == 0) & (
-    #                 datos_estadisticas['Ausencia'] == 0) & (datos_estadisticas['Desapuntado'] == 0)]['Fecha'].iloc[
-    #         -1]
-    # Comprobamos si hay entrenamientos jugados
-    # if datos_estadisticas[
-    #     (datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (datos_estadisticas['AusenciaUltimoMomento'] == 0) & (
-    #             datos_estadisticas['Ausencia'] == 0) & (datos_estadisticas['Desapuntado'] == 0)].shape[0] == 0:
-    #     fecha_uentrenamiento = "-"
-    # else:
-    #     fecha_uentrenamiento = datos_estadisticas[(datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (
-    #             datos_estadisticas['AusenciaUltimoMomento'] == 0) & (datos_estadisticas['Ausencia'] == 0) & (
-    #                                                       datos_estadisticas['Desapuntado'] == 0)]['Fecha'].iloc[-1]
-    # Empezamos a obtener valores del dataframe
-    Muertes = int(datos_estadisticas['Muertes'])
-    Bajas = int(datos_estadisticas['Bajas'])
-    Partidas = int(datos_estadisticas['Partidas'])
+    try:
+        query = 'SELECT SUM(Bajas) as Bajas, SUM(MUERTES) as Muertes, COUNT(*) as Partidas FROM "Estadisticas" WHERE idMiembro=' + str(
+            member.id)
+        columnas_estadisticas = ('Bajas', 'Muertes', 'Partidas')
+        datos_estadisticas = pd.DataFrame(sql_fetch(query), columns=columnas_estadisticas)
+        # Comprobamos si hay partidas jugadas
+        # if datos_estadisticas[
+        #     (datos_estadisticas['TipoPartida'] == 'Oficial') & (datos_estadisticas['AusenciaUltimoMomento'] == 0) & (
+        #             datos_estadisticas['Ausencia'] == 0) & (datos_estadisticas['Desapuntado'] == 0)].shape[0] == 0:
+        #     fecha_upartida = "-"
+        # else:
+        #     fecha_upartida = datos_estadisticas[
+        #         (datos_estadisticas['TipoPartida'] == 'Oficial') & (datos_estadisticas['AusenciaUltimoMomento'] == 0) & (
+        #                 datos_estadisticas['Ausencia'] == 0) & (datos_estadisticas['Desapuntado'] == 0)]['Fecha'].iloc[
+        #         -1]
+        # Comprobamos si hay entrenamientos jugados
+        # if datos_estadisticas[
+        #     (datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (datos_estadisticas['AusenciaUltimoMomento'] == 0) & (
+        #             datos_estadisticas['Ausencia'] == 0) & (datos_estadisticas['Desapuntado'] == 0)].shape[0] == 0:
+        #     fecha_uentrenamiento = "-"
+        # else:
+        #     fecha_uentrenamiento = datos_estadisticas[(datos_estadisticas['TipoPartida'] == 'Entrenamiento') & (
+        #             datos_estadisticas['AusenciaUltimoMomento'] == 0) & (datos_estadisticas['Ausencia'] == 0) & (
+        #                                                       datos_estadisticas['Desapuntado'] == 0)]['Fecha'].iloc[-1]
+        # Empezamos a obtener valores del dataframe
+        Muertes = int(datos_estadisticas['Muertes'])
+        Bajas = int(datos_estadisticas['Bajas'])
+        Partidas = int(datos_estadisticas['Partidas'])
+    except:
+        Muertes = 0
+        Bajas = 0
+        Partidas = 0
     # Si las variables son 0 no calculamos
     if Muertes == 0 and Bajas == 0:
         Muertes = "0"
