@@ -149,7 +149,7 @@ def obtener_estadisticas(member):
         Bajas = "0"
         KD = "0"
     else:
-        KD = Muertes / Bajas
+        KD = Bajas / Muertes
     # Seguimos obteniendo valores del dataframe
     # Curados = int(datos_estadisticas['Curados'].sum())
     # VehiculosDestruidos = int(datos_estadisticas['VehiculosDestruidos'].sum())
